@@ -1,0 +1,251 @@
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "debian-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  USER
+}
+
+enum OtpType {
+  VERIFY_ACCOUNT
+  RESET_PASSWORD
+  ORDER_PAYMENT
+}
+
+enum PaymentMethod {
+  COD
+  BANKING
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  SHIPPING
+  DELIVERED
+  CANCELLED
+}
+
+enum CoinTransactionType {
+  ORDER_EARN
+  TASK_EARN
+  VOUCHER_REDEEM
+  SPIN_COST
+  SPIN_REWARD
+}
+
+enum VoucherSource {
+  REDEEM
+  SPIN
+  ADMIN_GIFT
+}
+
+model User {
+  id               String            @id @default(cuid())
+  fullName         String
+  email            String            @unique
+  passwordHash     String
+  role             Role              @default(USER)
+  isVerified       Boolean           @default(false)
+  coinBalance      Int               @default(0)
+  avatarUrl        String?
+  mustChangePassword Boolean         @default(false)
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  otpCodes         OtpCode[]
+  orders           Order[]
+  addresses        Address[]
+  chatMessages     ChatMessage[]
+  orderChatMessages OrderChatMessage[]
+  coinTransactions CoinTransaction[]
+  taskClaims       TaskClaim[]
+  userVouchers     UserVoucher[]
+}
+
+model OtpCode {
+  id         String   @id @default(cuid())
+  code       String
+  type       OtpType
+  expiresAt  DateTime
+  verifiedAt DateTime?
+  createdAt  DateTime @default(now())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, type])
+}
+
+model Category {
+  id          String    @id @default(cuid())
+  name        String
+  slug        String    @unique
+  description String?
+  products    Product[]
+}
+
+model Product {
+  id         String      @id @default(cuid())
+  name       String
+  slug       String      @unique
+  description String
+  price      Float
+  salePrice  Float?
+  imageUrl   String?
+  stock      Int         @default(0)
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+  categoryId String
+  category   Category    @relation(fields: [categoryId], references: [id])
+  orderItems OrderItem[]
+}
+
+model Address {
+  id       String   @id @default(cuid())
+  fullName String
+  phone    String
+  street   String
+  district String
+  city     String
+  userId   String
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  orders   Order[]
+}
+
+model Order {
+  id            String         @id @default(cuid())
+  orderCode     String         @unique
+  subtotal      Float
+  shippingFee   Float
+  totalAmount   Float
+  discountAmount Float        @default(0)
+  voucherCode   String?
+  paymentMethod PaymentMethod
+  paymentStatus PaymentStatus  @default(PENDING)
+  status        OrderStatus    @default(PENDING)
+  note          String?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  userId        String
+  user          User           @relation(fields: [userId], references: [id])
+  addressId     String
+  address       Address        @relation(fields: [addressId], references: [id])
+  items         OrderItem[]
+  chatMessages  OrderChatMessage[]
+}
+
+model OrderItem {
+  id          String   @id @default(cuid())
+  quantity    Int
+  unitPrice   Float
+  productName String
+  productId   String
+  orderId     String
+  product     Product  @relation(fields: [productId], references: [id])
+  order       Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+}
+
+model ChatMessage {
+  id        String   @id @default(cuid())
+  role      String
+  content   String
+  createdAt DateTime @default(now())
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+}
+
+
+model OrderChatMessage {
+  id         String   @id @default(cuid())
+  content    String
+  senderRole Role
+  senderName String
+  createdAt  DateTime @default(now())
+  orderId    String
+  order      Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([orderId, createdAt])
+}
+
+model Task {
+  id          String      @id @default(cuid())
+  title       String
+  description String?
+  coinReward  Int
+  isActive    Boolean     @default(true)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  claims      TaskClaim[]
+}
+
+model TaskClaim {
+  id          String   @id @default(cuid())
+  userId      String
+  taskId      String
+  claimedAt   DateTime @default(now())
+  rewardCoins Int
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  task        Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, taskId])
+}
+
+model Voucher {
+  id             String        @id @default(cuid())
+  code           String        @unique
+  title          String
+  description    String?
+  discountType   String
+  discountValue  Float
+  minOrderAmount Float         @default(0)
+  maxDiscount    Float?
+  startsAt       DateTime?
+  expiresAt      DateTime?
+  coinCost       Int           @default(0)
+  quantity       Int           @default(0)
+  usedCount      Int           @default(0)
+  isActive       Boolean       @default(true)
+  isSpinEnabled  Boolean       @default(false)
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  userVouchers   UserVoucher[]
+}
+
+model UserVoucher {
+  id         String        @id @default(cuid())
+  userId     String
+  voucherId  String
+  source     VoucherSource @default(REDEEM)
+  createdAt  DateTime      @default(now())
+  redeemedAt DateTime?
+  user       User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  voucher    Voucher       @relation(fields: [voucherId], references: [id], onDelete: Cascade)
+}
+
+model CoinTransaction {
+  id          String              @id @default(cuid())
+  userId      String
+  amount      Int
+  type        CoinTransactionType
+  description String
+  createdAt   DateTime            @default(now())
+  user        User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model RewardSetting {
+  id       String @id @default("default")
+  spinCost Int    @default(50)
+}

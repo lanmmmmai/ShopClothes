@@ -1,16 +1,3 @@
-# Chic Threads Studio - phiên bản fullstack
-
-Tôi đã chuyển dự án demo sang hướng **code thuần tách frontend + backend**, bổ sung:
-
-- Lưu dữ liệu bằng **Prisma schema**
-- 2 vai trò người dùng: **admin** và **user**
-- Đăng ký tài khoản + **OTP gửi về Gmail** để xác thực
-- **Chatbot dùng OpenAI API key**
-- Tạo đơn hàng, mô phỏng thanh toán và **gửi bill về Gmail**
-- Hệ thống xu: admin tạo nhiệm vụ nhận xu, đặt phí quay voucher và đặt số xu đổi voucher
-- Vòng quay voucher: admin chọn voucher tham gia spin, user quay nhận thưởng
-- Đóng gói lại thành file zip mới
-
 ## Cấu trúc mới
 
 ```bash

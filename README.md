@@ -53,7 +53,6 @@ npm run prisma:seed
 npm run dev
 ```
 
-> Ghi chú: trong môi trường đóng gói này tôi đã viết sẵn mã nguồn backend và Prisma schema. Tuy nhiên bước `npm install` của backend có thể cần chạy trên máy của bạn để tải Prisma engine đầy đủ trước khi `generate/migrate`.
 
 ## Tài khoản admin seed sẵn
 
@@ -89,20 +88,6 @@ Mật khẩu: Admin@123
 - `Checkout.tsx`: gửi đơn hàng xuống backend và email bill
 - `AIStylist.tsx`: gọi chatbot OpenAI qua backend
 
-## Lưu ý
-
-Dự án gốc còn nhiều trang admin/shop đang dùng mock data. Tôi đã ưu tiên chuyển các phần cốt lõi mà bạn yêu cầu: **xác thực, phân quyền, chatbot, đơn hàng, schema và email**. Nếu muốn, bước tiếp theo nên là nối toàn bộ danh sách sản phẩm/đơn hàng/admin dashboard sang API backend mới.
-
-
-## Sửa lỗi kết nối frontend-backend
-
-Bản zip này đã sửa lỗi `Failed to fetch` khi frontend chạy ở `http://localhost:8080` còn backend ở `http://localhost:4000`.
-
-### Điểm đã sửa
-- Frontend mặc định gọi `/api` thay vì hardcode `http://localhost:4000/api`
-- Vite đã thêm proxy `/api -> http://localhost:4000`
-- Backend CORS cho phép cả `localhost:8080`, `localhost:5173`, `127.0.0.1:8080`, `127.0.0.1:5173`
-- Có thể tùy chỉnh bằng `CLIENT_URLS` trong `backend/.env`
 
 ### Chạy đúng
 Terminal 1:
